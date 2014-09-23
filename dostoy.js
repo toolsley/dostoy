@@ -129,7 +129,7 @@ var dostoy = function () {
         curX = 0;
         curY = 0;
         ctx.rect(0, 0, ctx.canvas.width, ctx.canvas.height);
-        ctx.fillStyle = "rgba(" + ansiColors[backgroundColor][0] + "," + ansiColors[backgroundColor][1] + "," + ansiColors[backgroundColor][0] + ",1)";
+        ctx.fillStyle = "rgba(0,0,0,1)";
         ctx.fill();
 
     }
