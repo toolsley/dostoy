@@ -22,7 +22,7 @@ Make an HTML page with a canvas
 Usage
 -----
 
-### Interactive Mode
+### Interactive (Easy) Mode
 Prompt, cursor, input, command interpreter
 
 ```js
@@ -47,17 +47,20 @@ Prompt, cursor, input, command interpreter
 	});
 ```
 
-### Non-Interactive Mode
-Manual output without input
+### Manual Mode
+Manual output with manual input
 
 ```js
 	dostoy.init({
 		font: window.atob("your font in base64"), // or Uint8Array with font data
 		fontHeight: 14, // or appropriate for font
 		canvas: document.getElementById("your-canvas-id"),
-		interactive:false,
+		interactive:false
 	});
 	dostoy.println("Hello World");
+	dostoy.input("Your name?", function(name) {
+		dostoy.println("Hello to you too, "+name);
+	});
 ```
 
 ### Reference
