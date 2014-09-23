@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Dostoy input demo</title>
+    <title>Dostoy input and locate demo</title>
     <style>
         body, html {
             margin: 0px;
@@ -35,19 +35,26 @@
 
         dostoy.setCursor(true);
 
+        dostoy.locate(10,2);
+        dostoy.println("Number game");
+        dostoy.locate(10,3);
+        dostoy.println("-----------");
+        dostoy.println();
+
         var myNumber = Math.floor((Math.random() * 10) + 1);
         var numberGuessHandler = function(number) {
             if (number == myNumber) {
                 dostoy.println("You got it!")
+                dostoy.setCursor(false);
             } else {
                 if (number > myNumber) dostoy.println("It's LESS than that");
                 if (number < myNumber) dostoy.println("It's MORE than that");
-                dostoy.input("Next guess?",numberGuessHandler);
+                dostoy.input("Next guess? ",numberGuessHandler);
             }
 
         }
 
-        dostoy.input("I thought of a number between 1 and 10. What could it be?", numberGuessHandler);
+        dostoy.input("I thought of a number between 1 and 10. What could it be? ", numberGuessHandler);
     };
 
     window.onunload = function() {

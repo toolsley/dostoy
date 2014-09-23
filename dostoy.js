@@ -1,5 +1,6 @@
 /**
  * dostoy - A silly interactive retro console library for the HTML5 canvas
+ *
  * The MIT License (MIT)
  *
  * Copyright (c) 2014 Toolsley.com
@@ -42,10 +43,16 @@ var dostoy = function () {
     var cursor = true;
     var flipflop = true;
 
+    var applicationInputHandler = null;
+    var shellInputHandler = null;
+
     var shiftState = false;
     var inputBuffer = "";
 
     var prompt = ">";
+
+    var interactive = true;
+
 
     var ansiColors = [ // quickbasic order
         [0, 0, 0],
@@ -108,8 +115,14 @@ var dostoy = function () {
 
     }
 
+
     var onCommand = function (inputBuffer) {
-        println("add commandHandler:function(inputBuffer) to the configuration");
+        if (applicationInputHandler) {
+            applicationInputHandler(inputBuffer);
+        } else {
+            shellInputHandler(inputBuffer);
+        }
+
     }
 
     var cls = function () {
@@ -128,8 +141,8 @@ var dostoy = function () {
     var chr = function (code) {
         var codes = code.split(",");
         var out = "";
-        for (var i = 0, icode; icode = codes[i];i++)
-             out+=String.fromCharCode(icode);
+        for (var i = 0, icode; icode = codes[i]; i++)
+            out += String.fromCharCode(icode);
 
         return out;
     }
@@ -137,8 +150,8 @@ var dostoy = function () {
     var newLine = function () {
         cursorBlink(false);
         if (curY + 1 > maxY) {
-            ctx.putImageData(ctx.getImageData(0,fontHeight,ctx.canvas.width,ctx.canvas.height-fontHeight),0,0);
-            ctx.rect(0,maxY*fontHeight,ctx.canvas.width,fontHeight);
+            ctx.putImageData(ctx.getImageData(0, fontHeight, ctx.canvas.width, ctx.canvas.height - fontHeight), 0, 0);
+            ctx.rect(0, maxY * fontHeight, ctx.canvas.width, fontHeight);
             ctx.fillStyle = "rgba(" + ansiColors[backgroundColor][0] + "," + ansiColors[backgroundColor][1] + "," + ansiColors[backgroundColor][0] + ",1)";
             ctx.fill();
 
@@ -151,7 +164,7 @@ var dostoy = function () {
     }
 
     var doPrompt = function () {
-        if (prompt)
+        if (prompt && interactive)
             print(prompt);
     }
 
@@ -224,20 +237,21 @@ var dostoy = function () {
 
     var initInput = function (inputSource) {
         inputSource.addEventListener("keydown", function (evt) {
+            if (!interactive) return;
             evt.preventDefault();
 
             if (evt.keyCode >= 48 && evt.keyCode <= 90) {
 
-                    // letters & numbers
+                // letters & numbers
 
-                    var inLetter = "";
-                    if (shiftState)
-                        inLetter = String.fromCharCode(evt.keyCode);
+                var inLetter = "";
+                if (shiftState)
+                    inLetter = String.fromCharCode(evt.keyCode);
 
-                    else
-                        inLetter = String.fromCharCode(evt.keyCode).toLowerCase();
-                    print(inLetter);
-                    inputBuffer += inLetter;
+                else
+                    inLetter = String.fromCharCode(evt.keyCode).toLowerCase();
+                print(inLetter);
+                inputBuffer += inLetter;
 
             } else {
                 switch (evt.keyCode) {
@@ -259,7 +273,7 @@ var dostoy = function () {
 
                         inputBuffer = "";
 
-                        doPrompt();
+                        if (shellInputHandler && !applicationInputHandler) doPrompt();
                         break;
                     case 16: // shift
                         shiftState = true;
@@ -277,23 +291,24 @@ var dostoy = function () {
         });
 
         document.addEventListener("keyup", function (evt) {
-                    switch (evt.keyCode) {
-                        case 16:
-                            shiftState = false;
-                            break;
-                        case 186:
-                            !shiftState ? print(";") : print(":");
-                            break;
-                    }
+                if (!interactive) return;
+                switch (evt.keyCode) {
+                    case 16:
+                        shiftState = false;
+                        break;
+                    case 186:
+                        !shiftState ? print(";") : print(":");
+                        break;
                 }
+            }
         );
     }
 
-    var setPrompt = function(newPrompt) {
+    var setPrompt = function (newPrompt) {
         prompt = newPrompt;
     }
 
-    var setCursor = function(state) {
+    var setCursor = function (state) {
         cursor = state;
     }
 
@@ -307,13 +322,15 @@ var dostoy = function () {
         initCharSet(config.font, config.fontHeight);
         fontHeight = config.fontHeight;
 
-        (config.lines) ? maxY = config.lines : maxY = Math.floor(ctx.canvas.height / fontHeight)-1;
-        (config.columns) ? maxX = config.columns : maxX = Math.floor(ctx.canvas.width / 8)-1;
+        (config.lines) ? maxY = config.lines : maxY = Math.floor(ctx.canvas.height / fontHeight) - 1;
+        (config.columns) ? maxX = config.columns : maxX = Math.floor(ctx.canvas.width / 8) - 1;
+
+
+        initInput(config.inputSource ? config.inputSourse : document);
 
         if (config.interactive) {
-            initInput(config.inputSource ? config.inputSourse : document);
 
-            if (config.commandHandler) onCommand = config.commandHandler;
+            if (config.commandHandler) shellInputHandler = config.commandHandler;
 
             if (config.prompt) {
                 setPrompt(config.prompt);
@@ -328,16 +345,48 @@ var dostoy = function () {
         } else {
             cursor = false;
         }
+        interactive = config.interactive;
         window.setInterval(cursorBlink, 500);
 
+    }
+
+    var input = function (inputPrompt, resultHandler) {
+        var oldPrompt = prompt;
+
+        applicationInputHandler =
+            function (oldPrompt) {
+                return function (value) {
+                    interactive = false;
+                    setPrompt(oldPrompt);
+                    applicationInputHandler = null;
+                    resultHandler(value);
+                    if (shellInputHandler)
+                        interactive = true;
+                }
+            }(prompt);
+
+        interactive = true;
+        setPrompt(inputPrompt);
+
+        doPrompt();
+
+    }
+
+    var locate = function (col, row) {
+        if (col)
+        curX = col < maxX ? col : 0;
+        if (row)
+        curY = row < maxY ? row : 0;
     }
 
     return {
         init: init,
         print: print,
         println: println,
+        input: input,
+        locate: locate,
         cls: cls,
-        chr:chr,
+        chr: chr,
         color: color,
         setPrompt: setPrompt,
         setCursor: setCursor

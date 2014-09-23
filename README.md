@@ -64,6 +64,8 @@ Manual output without input
 
 print(text)<br>
 println(text)<br>
+input(prompt,function(input))<br>
+locate(col,row)<br>
 chr(charcodes) - this also prints. charcodes can be a single ascii code or a comma separated list<br>
 cls()<br>
 setCursor(true/false)<br>
