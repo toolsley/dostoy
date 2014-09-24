@@ -209,18 +209,22 @@ var dostoy = function () {
 
         for (var i = 0; i < Math.min(text.length, maxX); i++) {
 
-            ctx.putImageData(charSet[text.charCodeAt(i)], startXReal + (i * 8), startYReal);
+            var charImage = charSet[text.charCodeAt(i)];
 
             if (backgroundColor != 0 || foregroundColor != 15) {
-                var colorizedCharacter = ctx.getImageData(startXReal + (i * 8), startYReal, 8, fontHeight);
 
-                for (var j = 0; j < colorizedCharacter.data.length; j += 4) {
-                    colorizedCharacter.data[j] = colorizedCharacter.data[j] !== 255 ? ansiColors[backgroundColor][0] : ansiColors[foregroundColor][0];
-                    colorizedCharacter.data[j + 1] = colorizedCharacter.data[j + 1] !== 255 ? ansiColors[backgroundColor][1] : ansiColors[foregroundColor][1];
-                    colorizedCharacter.data[j + 2] = colorizedCharacter.data[j + 2] !== 255 ? ansiColors[backgroundColor][2] : ansiColors[foregroundColor][2];
+                var colorizedCharImage = ctx.createImageData(8,fontHeight);
+
+                for (var j = 0; j < colorizedCharImage.data.length; j += 4) {
+                    colorizedCharImage.data[j] = charImage.data[j] !== 255 ? ansiColors[backgroundColor][0] : ansiColors[foregroundColor][0];
+                    colorizedCharImage.data[j + 1] = charImage.data[j + 1] !== 255 ? ansiColors[backgroundColor][1] : ansiColors[foregroundColor][1];
+                    colorizedCharImage.data[j + 2] = charImage.data[j + 2] !== 255 ? ansiColors[backgroundColor][2] : ansiColors[foregroundColor][2];
+                    colorizedCharImage.data[j + 3] = 255;
                 }
 
-                ctx.putImageData(colorizedCharacter, startXReal + (i * 8), startYReal);
+                ctx.putImageData(colorizedCharImage, startXReal + (i * 8), startYReal);
+            } else {
+                ctx.putImageData(charImage, startXReal + (i * 8), startYReal);
             }
 
             curX++;
