@@ -129,7 +129,7 @@ var dostoy = function () {
         curX = 0;
         curY = 0;
         ctx.rect(0, 0, ctx.canvas.width, ctx.canvas.height);
-        ctx.fillStyle = "rgba(0,0,0,1)";
+        ctx.fillStyle = "rgba(" + ansiColors[backgroundColor][0] + "," + ansiColors[backgroundColor][1] + "," + ansiColors[backgroundColor][0] + ",1)";
         ctx.fill();
 
     }
@@ -152,7 +152,7 @@ var dostoy = function () {
         if (curY + 1 > maxY) {
             ctx.putImageData(ctx.getImageData(0, fontHeight, ctx.canvas.width, ctx.canvas.height - fontHeight), 0, 0);
             ctx.rect(0, maxY * fontHeight, ctx.canvas.width, fontHeight);
-            ctx.fillStyle = "rgba(" + ansiColors[backgroundColor][0] + "," + ansiColors[backgroundColor][1] + "," + ansiColors[backgroundColor][0] + ",1)";
+            ctx.fillStyle = "rgba(0,0,0,1)";
             ctx.fill();
 
             curX = 0;
@@ -284,6 +284,7 @@ var dostoy = function () {
                         break;
                     case 190:
                         print(".");
+                        inputBuffer += ".";
                         break;
                 }
             }
@@ -322,8 +323,8 @@ var dostoy = function () {
         initCharSet(config.font, config.fontHeight);
         fontHeight = config.fontHeight;
 
-        (config.lines) ? maxY = config.lines : maxY = Math.floor(ctx.canvas.height / fontHeight) - 1;
-        (config.columns) ? maxX = config.columns : maxX = Math.floor(ctx.canvas.width / 8) - 1;
+        (config.lines) ? maxY = config.lines : maxY = Math.floor(ctx.canvas.height / fontHeight)-1;
+        (config.columns) ? maxX = config.columns : maxX = Math.floor(ctx.canvas.width / 8)-1;
 
 
         initInput(config.inputSource ? config.inputSourse : document);
