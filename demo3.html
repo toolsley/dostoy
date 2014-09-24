@@ -14,11 +14,20 @@
             width: 100%;
             height: 100%;
         }
+        #mobileInput {
+            position: absolute;
+            top:-5px;
+            left:-5px;
+            width:0px;
+            height:0px;
+        }
 
     </style>
 <body>
 <main>
     <canvas id="viewPort" width="1024" height="768"></canvas>
+    <input id="mobileInput" type="text">
+
 </main>
 
 <script src="dostoy.js"></script>
@@ -56,6 +65,11 @@
 
         dostoy.input("I thought of a number between 1 and 10. What could it be? ", numberGuessHandler);
     };
+
+    document.getElementById("viewPort").addEventListener("click",function(evt){
+        document.getElementById("mobileInput").focus();
+    });
+
 
     window.onunload = function() {
         location.reload();

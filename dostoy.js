@@ -73,6 +73,40 @@ var dostoy = function () {
         [255, 255, 255]
     ];
 
+    /**
+     * index starts at the first printable keyCode (code 48, char "0")
+     **/
+
+    var baseChars = ["0","1","2","3","4","5","6","7","8","9",
+        "","","","","","","",
+        "a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z",
+        "","","","","",
+        "0","1","2","3","4","5","6","7","8","9","*","+","","-",".","\/", // numpad
+        "","","","","","","","","","","","","","","","","","","","",
+        "","","","","","","","","","","","","","","","","","","","",
+        "","","","","","","","","","","","","","","","","","","","",
+        "","","","","","","","","","","","","","",
+        ";","=",",","-",".","/","`",
+        "","","","","","","","","","","","","","","","","","","","",
+        "","","","","","",
+        "[","\\","]","'"
+    ];
+
+    var shiftChars =
+        [")","!","@","#","$","%","^","&","*","(",
+         "","","","","","","",
+         "A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z",
+         "","","","","",
+         "","","","","","","","","","","","","","","","", // numpad
+         "","","","","","","","","","","","","","","","","","","","",
+         "","","","","","","","","","","","","","","","","","","","",
+         "","","","","","","","","","","","","","","","","","","","",
+         "","","","","","","","","","","","","","",
+         ":","+","<","_",">","?","~",
+         "","","","","","","","","","","","","","","","","","","","",
+         "","","","","","",
+         "{","|","}","\""
+         ];
 
     var byte2bits = function (a) {
         var tmp = "";
@@ -172,22 +206,21 @@ var dostoy = function () {
         text = text.toString().replace(/\t/g, "       ");
         var startXReal = curX * 8;
         var startYReal = curY * fontHeight;
-        var characterBuffer;
+
         for (var i = 0; i < Math.min(text.length, maxX); i++) {
+
+            ctx.putImageData(charSet[text.charCodeAt(i)], startXReal + (i * 8), startYReal);
+
             if (backgroundColor != 0 || foregroundColor != 15) {
-                characterBuffer = new Uint8ClampedArray(charSet[text.charCodeAt(i)].data);
-                for (var j = 0; j < characterBuffer.length; j += 4) {
-                    characterBuffer[j] = characterBuffer[j] !== 255 ? ansiColors[backgroundColor][0] : ansiColors[foregroundColor][0];
-                    characterBuffer[j + 1] = characterBuffer[j + 1] !== 255 ? ansiColors[backgroundColor][1] : ansiColors[foregroundColor][1];
-                    characterBuffer[j + 2] = characterBuffer[j + 2] !== 255 ? ansiColors[backgroundColor][2] : ansiColors[foregroundColor][2];
+                var colorizedCharacter = ctx.getImageData(startXReal + (i * 8), startYReal, 8, fontHeight);
+
+                for (var j = 0; j < colorizedCharacter.data.length; j += 4) {
+                    colorizedCharacter.data[j] = colorizedCharacter.data[j] !== 255 ? ansiColors[backgroundColor][0] : ansiColors[foregroundColor][0];
+                    colorizedCharacter.data[j + 1] = colorizedCharacter.data[j + 1] !== 255 ? ansiColors[backgroundColor][1] : ansiColors[foregroundColor][1];
+                    colorizedCharacter.data[j + 2] = colorizedCharacter.data[j + 2] !== 255 ? ansiColors[backgroundColor][2] : ansiColors[foregroundColor][2];
                 }
-                var colorizedCharacter = ctx.createImageData(8, fontHeight);
-                colorizedCharacter.data.set(characterBuffer);
 
                 ctx.putImageData(colorizedCharacter, startXReal + (i * 8), startYReal);
-            } else {
-                ctx.putImageData(charSet[text.charCodeAt(i)], startXReal + (i * 8), startYReal);
-
             }
 
             curX++;
@@ -237,23 +270,22 @@ var dostoy = function () {
 
     var initInput = function (inputSource) {
         inputSource.addEventListener("keydown", function (evt) {
+
+            var char;
+
             if (!interactive) return;
             evt.preventDefault();
 
-            if (evt.keyCode >= 48 && evt.keyCode <= 90) {
+            if (evt.keyCode >= 48) {
 
-                // letters & numbers
-
-                var inLetter = "";
-                if (shiftState)
-                    inLetter = String.fromCharCode(evt.keyCode);
+                if (evt.shiftKey)
+                    char = shiftChars[evt.keyCode-48];
 
                 else
-                    inLetter = String.fromCharCode(evt.keyCode).toLowerCase();
-                print(inLetter);
-                inputBuffer += inLetter;
+                    char = baseChars[evt.keyCode-48];
 
             } else {
+
                 switch (evt.keyCode) {
                     case 8: // backspace
                         if (curX > prompt.length) {
@@ -262,6 +294,7 @@ var dostoy = function () {
                             curX--;
                             cursorBlink();
                             inputBuffer = inputBuffer.substring(0, inputBuffer.length - 1);
+                            char = "";
                         }
                         break;
                     case 13: //enter
@@ -275,34 +308,18 @@ var dostoy = function () {
 
                         if (shellInputHandler && !applicationInputHandler) doPrompt();
                         break;
-                    case 16: // shift
-                        shiftState = true;
-                        break;
                     case 32: // space
-                        print(" ");
-                        inputBuffer += " ";
-                        break;
-                    case 190:
-                        print(".");
-                        inputBuffer += ".";
+                        char = " ";
                         break;
                 }
+            }
+            if (char) {
+                print(char);
+                inputBuffer += char;
             }
 
         });
 
-        document.addEventListener("keyup", function (evt) {
-                if (!interactive) return;
-                switch (evt.keyCode) {
-                    case 16:
-                        shiftState = false;
-                        break;
-                    case 186:
-                        !shiftState ? print(";") : print(":");
-                        break;
-                }
-            }
-        );
     }
 
     var setPrompt = function (newPrompt) {
@@ -323,8 +340,8 @@ var dostoy = function () {
         initCharSet(config.font, config.fontHeight);
         fontHeight = config.fontHeight;
 
-        (config.lines) ? maxY = config.lines : maxY = Math.floor(ctx.canvas.height / fontHeight)-1;
-        (config.columns) ? maxX = config.columns : maxX = Math.floor(ctx.canvas.width / 8)-1;
+        (config.lines) ? maxY = config.lines : maxY = Math.floor(ctx.canvas.height / fontHeight) - 1;
+        (config.columns) ? maxX = config.columns : maxX = Math.floor(ctx.canvas.width / 8) - 1;
 
 
         initInput(config.inputSource ? config.inputSourse : document);
@@ -352,7 +369,6 @@ var dostoy = function () {
     }
 
     var input = function (inputPrompt, resultHandler) {
-        var oldPrompt = prompt;
 
         applicationInputHandler =
             function (oldPrompt) {
@@ -375,9 +391,9 @@ var dostoy = function () {
 
     var locate = function (col, row) {
         if (col)
-        curX = col < maxX ? col : 0;
+            curX = col < maxX ? col : 0;
         if (row)
-        curY = row < maxY ? row : 0;
+            curY = row < maxY ? row : 0;
     }
 
     return {
