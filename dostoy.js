@@ -45,14 +45,15 @@ var dostoy = function () {
 
     var applicationInputHandler = null;
     var shellInputHandler = null;
+    var singleKeyInputHandler = null;
+    var singleKeyInputHandlerUsed = false;
 
     var shiftState = false;
     var inputBuffer = "";
 
     var prompt = ">";
 
-    var interactive = true;
-
+    var shell = true;
 
     var ansiColors = [ // quickbasic order
         [0, 0, 0],
@@ -77,36 +78,36 @@ var dostoy = function () {
      * index starts at the first printable keyCode (code 48, char "0")
      **/
 
-    var baseChars = ["0","1","2","3","4","5","6","7","8","9",
-        "","","","","","","",
-        "a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z",
-        "","","","","",
-        "0","1","2","3","4","5","6","7","8","9","*","+","","-",".","\/", // numpad
-        "","","","","","","","","","","","","","","","","","","","",
-        "","","","","","","","","","","","","","","","","","","","",
-        "","","","","","","","","","","","","","","","","","","","",
-        "","","","","","","","","","","","","","",
-        ";","=",",","-",".","/","`",
-        "","","","","","","","","","","","","","","","","","","","",
-        "","","","","","",
-        "[","\\","]","'"
+    var baseChars = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
+        "", "", "", "", "", "", "",
+        "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z",
+        "", "", "", "", "",
+        "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "*", "+", "", "-", ".", "\/", // numpad
+        "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "",
+        "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "",
+        "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "",
+        "", "", "", "", "", "", "", "", "", "", "", "", "", "",
+        ";", "=", ",", "-", ".", "/", "`",
+        "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "",
+        "", "", "", "", "", "",
+        "[", "\\", "]", "'"
     ];
 
     var shiftChars =
-        [")","!","@","#","$","%","^","&","*","(",
-         "","","","","","","",
-         "A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z",
-         "","","","","",
-         "","","","","","","","","","","","","","","","", // numpad
-         "","","","","","","","","","","","","","","","","","","","",
-         "","","","","","","","","","","","","","","","","","","","",
-         "","","","","","","","","","","","","","","","","","","","",
-         "","","","","","","","","","","","","","",
-         ":","+","<","_",">","?","~",
-         "","","","","","","","","","","","","","","","","","","","",
-         "","","","","","",
-         "{","|","}","\""
-         ];
+        [")", "!", "@", "#", "$", "%", "^", "&", "*", "(",
+            "", "", "", "", "", "", "",
+            "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z",
+            "", "", "", "", "",
+            "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", // numpad
+            "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "",
+            "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "",
+            "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "",
+            "", "", "", "", "", "", "", "", "", "", "", "", "", "",
+            ":", "+", "<", "_", ">", "?", "~",
+            "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "",
+            "", "", "", "", "", "",
+            "{", "|", "}", "\""
+        ];
 
     var byte2bits = function (a) {
         var tmp = "";
@@ -198,7 +199,7 @@ var dostoy = function () {
     }
 
     var doPrompt = function () {
-        if (prompt && interactive)
+        if (prompt && shell)
             print(prompt);
     }
 
@@ -213,7 +214,7 @@ var dostoy = function () {
 
             if (backgroundColor != 0 || foregroundColor != 15) {
 
-                var colorizedCharImage = ctx.createImageData(8,fontHeight);
+                var colorizedCharImage = ctx.createImageData(8, fontHeight);
 
                 for (var j = 0; j < colorizedCharImage.data.length; j += 4) {
                     colorizedCharImage.data[j] = charImage.data[j] !== 255 ? ansiColors[backgroundColor][0] : ansiColors[foregroundColor][0];
@@ -275,18 +276,29 @@ var dostoy = function () {
     var initInput = function (inputSource) {
         inputSource.addEventListener("keydown", function (evt) {
 
-            var char;
+            if (singleKeyInputHandler) {
+                singleKeyInputHandlerUsed = true;
+                singleKeyInputHandler(evt.keyCode);
+                if (singleKeyInputHandlerUsed){
+                    singleKeyInputHandler = null;
+                    singleKeyInputHandlerUsed = false;
+                }
 
-            if (!interactive) return;
+                return;
+            }
+
+            if (!shell) return;
             evt.preventDefault();
+
+            var char;
 
             if (evt.keyCode >= 48) {
 
                 if (evt.shiftKey)
-                    char = shiftChars[evt.keyCode-48];
+                    char = shiftChars[evt.keyCode - 48];
 
                 else
-                    char = baseChars[evt.keyCode-48];
+                    char = baseChars[evt.keyCode - 48];
 
             } else {
 
@@ -310,13 +322,17 @@ var dostoy = function () {
 
                         inputBuffer = "";
 
-                        if (shellInputHandler && !applicationInputHandler) doPrompt();
+
+                        if (shellInputHandler && !applicationInputHandler && !singleKeyInputHandlerUsed) doPrompt();
+
                         break;
                     case 32: // space
                         char = " ";
                         break;
                 }
             }
+
+
             if (char) {
                 print(char);
                 inputBuffer += char;
@@ -350,7 +366,7 @@ var dostoy = function () {
 
         initInput(config.inputSource ? config.inputSourse : document);
 
-        if (config.interactive) {
+        if (config.shell) {
 
             if (config.commandHandler) shellInputHandler = config.commandHandler;
 
@@ -358,8 +374,8 @@ var dostoy = function () {
                 setPrompt(config.prompt);
             }
 
-            if (config.beforeInteractive) {
-                config.beforeInteractive();
+            if (config.beforeShell) {
+                config.beforeShell();
             }
 
             doPrompt();
@@ -367,7 +383,7 @@ var dostoy = function () {
         } else {
             cursor = false;
         }
-        interactive = config.interactive;
+        shell = config.shell;
         window.setInterval(cursorBlink, 500);
 
     }
@@ -377,20 +393,25 @@ var dostoy = function () {
         applicationInputHandler =
             function (oldPrompt) {
                 return function (value) {
-                    interactive = false;
+                    shell = false;
                     setPrompt(oldPrompt);
                     applicationInputHandler = null;
                     resultHandler(value);
                     if (shellInputHandler)
-                        interactive = true;
+                        shell = true;
                 }
             }(prompt);
 
-        interactive = true;
+        shell = true;
         setPrompt(inputPrompt);
 
         doPrompt();
 
+    }
+
+    var inkey = function (resultHandler) {
+        singleKeyInputHandler = resultHandler;
+        singleKeyInputHandlerUsed = false;
     }
 
     var locate = function (col, row) {
@@ -400,17 +421,31 @@ var dostoy = function () {
             curY = row < maxY ? row : 0;
     }
 
+    var setShell = function (value) {
+        if (value) {
+            shell = true;
+            dostoy.color(0,7);
+            if (singleKeyInputHandlerUsed)
+            doPrompt();
+        } else {
+            shell = false;
+        }
+
+    }
+
     return {
         init: init,
         print: print,
         println: println,
         input: input,
+        inkey: inkey,
         locate: locate,
         cls: cls,
         chr: chr,
         color: color,
         setPrompt: setPrompt,
-        setCursor: setCursor
+        setCursor: setCursor,
+        setShell: setShell
     }
 
 }();

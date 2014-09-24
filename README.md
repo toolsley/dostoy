@@ -1,7 +1,7 @@
 dostoy
 ======
 
-A silly interactive retro console library for the HTML5 canvas<br>
+A silly interactive retro terminal library for the HTML5 canvas<br>
 Make a fake DOS prompt or draw some ASCII/ANSI art.
 
 Live: http://www.toolsley.com/dos.html
@@ -22,7 +22,7 @@ Make an HTML page with a canvas
 Usage
 -----
 
-### Interactive (Easy) Mode
+### Shell Mode
 Prompt, cursor, input, command interpreter
 
 ```js
@@ -30,8 +30,8 @@ Prompt, cursor, input, command interpreter
 		font: window.atob("your font in base64"), // or Uint8Array with font data
 		fontHeight: 14, // or appropriate for font
 		canvas: document.getElementById("your-canvas-id"),
-		interactive:true,
-		beforeInteractive: function() {
+		shell:true,
+		beforeShell: function() {
 			dostoy.println("Some welcome message");
 		},
 		prompt: "C:\\>",
@@ -55,7 +55,7 @@ Manual output with manual input
 		font: window.atob("your font in base64"), // or Uint8Array with font data
 		fontHeight: 14, // or appropriate for font
 		canvas: document.getElementById("your-canvas-id"),
-		interactive:false
+		shell:false
 	});
 	dostoy.println("Hello World");
 	dostoy.input("Your name?", function(name) {
@@ -68,11 +68,13 @@ Manual output with manual input
 print(text)<br>
 println(text)<br>
 input(prompt,function(input))<br>
+inkey(function(keyCode))<br>
 locate(col,row)<br>
 chr(charcodes) - this also prints. charcodes can be a single ascii code or a comma separated list<br>
 cls()<br>
 setCursor(true/false)<br>
 setPrompt(text)<br>
+setShell(true,false)<br>
 color(bg,fg) - see color code table at http://en.wikibooks.org/wiki/QBasic/Text_Output#Color_by_Number)
 <br>
 Etc
