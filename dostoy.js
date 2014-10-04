@@ -164,7 +164,7 @@ var dostoy = function () {
         curX = 0;
         curY = 0;
         ctx.rect(0, 0, ctx.canvas.width, ctx.canvas.height);
-        ctx.fillStyle = "rgba(" + ansiColors[backgroundColor][0] + "," + ansiColors[backgroundColor][1] + "," + ansiColors[backgroundColor][0] + ",1)";
+        ctx.fillStyle = "rgba(" + ansiColors[backgroundColor][0] + "," + ansiColors[backgroundColor][1] + "," + ansiColors[backgroundColor][2] + ",1)";
         ctx.fill();
 
     }
@@ -415,9 +415,9 @@ var dostoy = function () {
     }
 
     var locate = function (col, row) {
-        if (col)
+        if (col >=0)
             curX = col < maxX ? col : 0;
-        if (row)
+        if (row >=0)
             curY = row < maxY ? row : 0;
     }
 
@@ -445,7 +445,10 @@ var dostoy = function () {
         color: color,
         setPrompt: setPrompt,
         setCursor: setCursor,
-        setShell: setShell
+        setShell: setShell,
+        getCols: function(){return maxX;},
+        getRows: function(){return maxY;}
+
     }
 
 }();

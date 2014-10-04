@@ -76,6 +76,8 @@ setCursor(true/false)<br>
 setPrompt(text)<br>
 setShell(true,false)<br>
 color(bg,fg) - see color code table at http://en.wikibooks.org/wiki/QBasic/Text_Output#Color_by_Number)
+getCols()<br>
+getRows()<br>
 <br>
 Etc
 ---
