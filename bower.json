@@ -1,0 +1,29 @@
+{
+  "name": "dostoy",
+  "main": "dostoy.js",
+  "version": "1.0.0",
+  "homepage": "https://github.com/toolsley/dostoy",
+  "authors": [
+    "Toolsley <toolsmith@toolsley.com>"
+  ],
+  "description": "Interactive DOS prompt in an HTML5 canvas",
+  "moduleType": [
+    "globals"
+  ],
+  "keywords": [
+    "dos",
+    "prompt",
+    "terminal",
+    "console",
+    "canvas",
+    "interactive"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
